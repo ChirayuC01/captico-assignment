@@ -18,6 +18,7 @@ const Courses = () => {
   const [loading, setLoading] = useState(false); // Track loading state
   const [idToDelete, setIdToDelete] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [errors, setErrors] = useState({}); // Track field errors
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -25,6 +26,16 @@ const Courses = () => {
       navigate("/login"); // Redirect to login if no token
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage(""); // Clear the message after 3 seconds
+      }, 3000);
+
+      return () => clearTimeout(timer); // Cleanup timer if `message` changes
+    }
+  }, [message]);
 
   // Fetch all courses
   const fetchCourses = async () => {
@@ -113,6 +124,27 @@ const Courses = () => {
     navigate("/login"); // Redirect to login
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Course name is required";
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    } else if (formData.description.length < 3) {
+      newErrors.description = "Description must be at least 10 characters long";
+    }
+
+    if (!formData.instructor.trim()) {
+      newErrors.instructor = "Instructor name is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       {/* Header with Logout Button */}
@@ -159,15 +191,13 @@ const Courses = () => {
           >
             Add New Course
           </button>
-          {message && (
-            <p className="text-center text-red-500 mt-4">{message}</p>
-          )}
+          {message && <p className="text-center text-red-500">{message}</p>}
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
               <div
                 key={course._id}
-                className="p-4 bg-white rounded-lg shadow hover:shadow-xl transition flex flex-col gap-2 hover:scale-105 duration-300"
+                className="h-full p-4 bg-white rounded-lg shadow hover:shadow-xl transition flex flex-col gap-2 hover:scale-105 duration-300"
               >
                 <h3 className="text-xl font-semibold">{course.name}</h3>
                 <p className="text-gray-600">{course.description}</p>
@@ -204,7 +234,14 @@ const Courses = () => {
                 <h2 className="text-2xl font-bold mb-4">
                   {editingCourse ? "Edit Course" : "Add New Course"}
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!validateForm()) return; // Prevent submission if validation fails
+                    handleSubmit();
+                  }}
+                  className="space-y-4"
+                >
                   <div className="flex flex-col gap-2">
                     <p className="font-bold">Course Name: </p>
                     <input
@@ -215,8 +252,15 @@ const Courses = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring ${
+                        errors.name
+                          ? "border-red-500 focus:ring-red-300"
+                          : "focus:ring-blue-300"
+                      }`}
                     />
+                    {errors.name && (
+                      <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2">
                     <p className="font-bold">Description: </p>
@@ -230,8 +274,17 @@ const Courses = () => {
                           description: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 h-24 resize-none"
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring ${
+                        errors.description
+                          ? "border-red-500 focus:ring-red-300"
+                          : "focus:ring-blue-300"
+                      } h-24 resize-none`}
                     />
+                    {errors.description && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.description}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2">
                     <p className="font-bold">Instructor: </p>
@@ -243,8 +296,17 @@ const Courses = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, instructor: e.target.value })
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring ${
+                        errors.instructor
+                          ? "border-red-500 focus:ring-red-300"
+                          : "focus:ring-blue-300"
+                      }`}
                     />
+                    {errors.instructor && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.instructor}
+                      </p>
+                    )}
                   </div>
                   <div className="flex justify-between">
                     <button
@@ -256,7 +318,8 @@ const Courses = () => {
                           description: "",
                           instructor: "",
                         }); // Reset form
-                        setIsModalOpen(false); // Open modal
+                        setErrors({}); // Clear errors
+                        setIsModalOpen(false); // Close modal
                       }}
                       className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-300 cursor-pointer"
                     >
