@@ -6,10 +6,16 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 
+// Configure CORS to allow your frontend origin
+const corsOptions = {
+    origin: "https://captico-assignment-ebon.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"]
+};
+
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 const PORT = process.env.PORT || 5000;
 
