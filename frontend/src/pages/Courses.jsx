@@ -238,7 +238,7 @@ const Courses = () => {
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (!validateForm()) return; // Prevent submission if validation fails
-                    handleSubmit();
+                    handleSubmit(e); // Pass the event to handleSubmit
                   }}
                   className="space-y-4"
                 >
