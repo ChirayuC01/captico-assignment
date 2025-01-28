@@ -8,7 +8,7 @@ const courseRoutes = require("./routes/courseRoutes");
 
 // Configure CORS to allow your frontend origin
 const corsOptions = {
-    origin: "https://captico-assignment-ebon.vercel.app",
+    origin: ["https://captico-assignment-ebon.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"]
 };
 

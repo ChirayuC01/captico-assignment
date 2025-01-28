@@ -11,6 +11,7 @@ const Register = () => {
     confirmPassword: "",
   });
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Track loading state
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,6 +20,8 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Start loading
+    setMessage(""); // Clear previous messages
     if (formData.password !== formData.confirmPassword) {
       setMessage("Passwords do not match");
       return;
@@ -29,6 +32,8 @@ const Register = () => {
       setMessage(res.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || "An error occurred");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -74,9 +79,12 @@ const Register = () => {
           {message && <p className=" text-center text-red-500">{message}</p>}
           <button
             type="submit"
-            className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300 cursor-pointer"
+            className={`w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300 cursor-pointer ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={loading} // Disable button while loading
           >
-            Register
+            {loading ? "Registering..." : "Register"}
           </button>
           <div className="flex justify-center items-center">
             <p className="text-[15px]">

@@ -6,6 +6,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Track loading state
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -14,6 +15,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Start loading
+    setMessage(""); // Clear previous messages
     try {
       const res = await API.post("/auth/login", formData);
       localStorage.setItem("token", res.data.token);
@@ -21,6 +24,8 @@ const Login = () => {
       navigate("/courses");
     } catch (err) {
       setMessage(err.response?.data?.message || "An error occurred");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -50,9 +55,12 @@ const Login = () => {
           {message && <p className="text-center text-red-500">{message}</p>}
           <button
             type="submit"
-            className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300 cursor-pointer"
+            className={`w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300 cursor-pointer ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={loading} // Disable button while loading
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
           <div className="flex justify-center items-center">
             <p className="text-[15px]">
