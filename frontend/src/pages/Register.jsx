@@ -4,38 +4,47 @@ import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
+
+  // State management for form data and UI states
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
+  // Track validation errors for each field
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-  }); // Track field errors
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  });
 
+  const [message, setMessage] = useState(""); // For displaying API response messages
+  const [loading, setLoading] = useState(false); // Track form submission state
+
+  // Effect hook to automatically clear feedback messages after 3 seconds
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
-        setMessage(""); // Clear the message after 3 seconds
+        setMessage("");
       }, 3000);
 
-      return () => clearTimeout(timer); // Cleanup timer if `message` changes
+      return () => clearTimeout(timer);
     }
   }, [message]);
 
+  // Validate all form fields
   const validate = () => {
     const newErrors = {};
 
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
 
+    // Email validation with regex pattern
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (
@@ -44,12 +53,14 @@ const Register = () => {
       newErrors.email = "Invalid email address";
     }
 
+    // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters long";
     }
 
+    // Confirm password validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirm Password is required";
     } else if (formData.password !== formData.confirmPassword) {
@@ -57,26 +68,28 @@ const Register = () => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    setErrors({ ...errors, [name]: "" }); // Clear the error for the current field
+    setErrors({ ...errors, [name]: "" }); // Clear error when user starts typing
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(""); // Clear previous messages
+    setMessage(""); // Clear any existing messages
 
-    if (!validate()) return; // Validate before submitting
+    if (!validate()) return; // Stop if validation fails
 
     setLoading(true);
     try {
       const res = await API.post("/auth/register", formData);
-      navigate("/login");
       setMessage(res.data.message);
+      navigate("/login"); // Redirect to login after successful registration
     } catch (err) {
       setMessage(err.response?.data?.message || "An error occurred");
     } finally {
@@ -91,6 +104,7 @@ const Register = () => {
           Register
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name Input Field */}
           <div>
             <input
               type="text"
@@ -108,6 +122,8 @@ const Register = () => {
               <p className="text-sm text-red-500 mt-1">{errors.name}</p>
             )}
           </div>
+
+          {/* Email Input Field */}
           <div>
             <input
               type="email"
@@ -125,6 +141,8 @@ const Register = () => {
               <p className="text-sm text-red-500 mt-1">{errors.email}</p>
             )}
           </div>
+
+          {/* Password Input Field */}
           <div>
             <input
               type="password"
@@ -142,6 +160,8 @@ const Register = () => {
               <p className="text-sm text-red-500 mt-1">{errors.password}</p>
             )}
           </div>
+
+          {/* Confirm Password Input Field */}
           <div>
             <input
               type="password"
@@ -161,7 +181,11 @@ const Register = () => {
               </p>
             )}
           </div>
+
+          {/* Error/Success Message Display */}
           {message && <p className="text-center text-red-500">{message}</p>}
+
+          {/* Submit Button */}
           <button
             type="submit"
             className={`w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300 cursor-pointer ${
@@ -171,6 +195,8 @@ const Register = () => {
           >
             {loading ? "Registering..." : "Register"}
           </button>
+
+          {/* Login Link */}
           <div className="flex justify-center items-center">
             <p className="text-[15px]">
               Already have an account?{" "}

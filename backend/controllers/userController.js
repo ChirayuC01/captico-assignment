@@ -30,6 +30,7 @@ const registerUser = async (req, res) => {
             password: hashedPassword,
         });
 
+        // Save user to database
         await user.save();
         res.status(201).json({ message: "User registered successfully." });
     } catch (error) {
@@ -55,7 +56,7 @@ const loginUser = async (req, res) => {
             return res.status(404).json({ message: "Invalid email or password." });
         }
 
-        // Compare password
+        // Compare provided password with stored hash
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid email or password." });
@@ -65,7 +66,7 @@ const loginUser = async (req, res) => {
         const token = jwt.sign(
             { id: user._id, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: "1h" } // Token expires in 1 hour for security
         );
 
         res.status(200).json({

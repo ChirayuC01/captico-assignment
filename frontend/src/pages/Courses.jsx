@@ -5,92 +5,96 @@ import API from "../api/axios";
 const Courses = () => {
   const navigate = useNavigate();
 
-  const [courses, setCourses] = useState([]);
+  // State management for courses and form data
+  const [courses, setCourses] = useState([]); // Stores all courses
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     instructor: "",
   });
-  const [editingCourse, setEditingCourse] = useState(null); // Track the course being edited
-  const [message, setMessage] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false); // Track modal state
-  const [loadingData, setLoadingData] = useState(false);
-  const [loading, setLoading] = useState(false); // Track loading state
-  const [idToDelete, setIdToDelete] = useState("");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [errors, setErrors] = useState({}); // Track field errors
+  const [editingCourse, setEditingCourse] = useState(null); // Tracks currently edited course
+  const [message, setMessage] = useState(""); // Stores feedback messages
+  const [isModalOpen, setIsModalOpen] = useState(false); // Controls form modal visibility
+  const [loadingData, setLoadingData] = useState(false); // Tracks data fetching state
+  const [loading, setLoading] = useState(false); // Tracks form submission state
+  const [idToDelete, setIdToDelete] = useState(""); // Stores ID of course to be deleted
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // Controls delete dialog visibility
+  const [errors, setErrors] = useState({}); // Stores form validation errors
 
+  // Authentication check effect
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/login"); // Redirect to login if no token
+      navigate("/login"); // Redirect to login if no authentication token found
     }
   }, [navigate]);
 
+  // Message auto-clear effect
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
-        setMessage(""); // Clear the message after 3 seconds
+        setMessage(""); // Clear feedback message after 3 seconds
       }, 3000);
 
-      return () => clearTimeout(timer); // Cleanup timer if `message` changes
+      return () => clearTimeout(timer); // Cleanup timer on component unmount or message change
     }
   }, [message]);
 
-  // Fetch all courses
+  // Fetches all courses from the API
   const fetchCourses = async () => {
-    setLoadingData(true); // Start loading
+    setLoadingData(true);
     try {
       const res = await API.get("/courses");
       setCourses(res.data);
     } catch (err) {
       setMessage("Failed to fetch courses");
     } finally {
-      setLoadingData(false); // Stop loading
+      setLoadingData(false);
     }
   };
 
+  // Initial data fetch effect
   useEffect(() => {
     fetchCourses();
   }, []);
 
-  // Handle form submission (Create or Update)
+  // Handle form submission for both creating and updating courses
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Start loading
-    setMessage(""); // Clear previous messages
+    setLoading(true);
+    setMessage("");
 
     if (editingCourse) {
-      // Update course
+      // Update existing course
       try {
         await API.put(`/course/${editingCourse._id}`, formData);
         setMessage("Course updated successfully");
-        fetchCourses(); // Refresh the list
-        setEditingCourse(null); // Reset editing state
-        setFormData({ name: "", description: "", instructor: "" }); // Reset form
-        setIsModalOpen(false); // Close modal
+        fetchCourses();
+        setEditingCourse(null);
+        setFormData({ name: "", description: "", instructor: "" });
+        setIsModalOpen(false);
       } catch (err) {
         setMessage(err.response?.data?.message || "Failed to update course");
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     } else {
-      // Create course
+      // Create new course
       try {
         await API.post("/courses", formData);
         setMessage("Course created successfully");
-        fetchCourses(); // Refresh the list
-        setFormData({ name: "", description: "", instructor: "" }); // Reset form
-        setIsModalOpen(false); // Close modal
+        fetchCourses();
+        setFormData({ name: "", description: "", instructor: "" });
+        setIsModalOpen(false);
       } catch (err) {
         setMessage(err.response?.data?.message || "Failed to create course");
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     }
   };
 
-  // Handle opening the modal for editing
+  // Prepare the form for editing an existing course
   const handleEdit = (course) => {
     setEditingCourse(course);
     setFormData({
@@ -98,32 +102,33 @@ const Courses = () => {
       description: course.description,
       instructor: course.instructor,
     });
-    setIsModalOpen(true); // Open modal
+    setIsModalOpen(true);
   };
 
-  // Handle deleting a course
+  // Handle course deletion
   const handleDelete = async (id) => {
-    setLoading(true); // Start loading
-    setMessage(""); // Clear previous messages
+    setLoading(true);
+    setMessage("");
     try {
       await API.delete(`/course/${id}`);
       setMessage("Course deleted successfully");
-      fetchCourses(); // Refresh the list
+      fetchCourses();
     } catch (err) {
       setMessage("Failed to delete course");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
       setIsDeleteDialogOpen(false);
-      setIdToDelete();
+      setIdToDelete("");
     }
   };
 
-  // Handle logout
+  // Handles user logout
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token
-    navigate("/login"); // Redirect to login
+    localStorage.removeItem("token"); // Removes authentication token
+    navigate("/login"); // Redirects to login page
   };
 
+  // Validate form data before submission
   const validateForm = () => {
     const newErrors = {};
 
@@ -142,12 +147,12 @@ const Courses = () => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      {/* Header with Logout Button */}
+      {/* Header Section with Title and Logout Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Courses</h1>
         <button
@@ -157,12 +162,14 @@ const Courses = () => {
           Logout
         </button>
       </div>
+
+      {/* Loading Spinner or Main Content */}
       {loadingData ? (
-        <div class="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center h-screen">
           <div role="status">
             <svg
               aria-hidden="true"
-              class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+              className="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
               viewBox="0 0 100 101"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -176,23 +183,27 @@ const Courses = () => {
                 fill="currentFill"
               />
             </svg>
-            <span class="sr-only">Loading...</span>
+            <span className="sr-only">Loading...</span>
           </div>
         </div>
       ) : (
         <div>
+          {/* Add New Course Button */}
           <button
             onClick={() => {
               setEditingCourse(null);
-              setFormData({ name: "", description: "", instructor: "" }); // Reset form
-              setIsModalOpen(true); // Open modal
+              setFormData({ name: "", description: "", instructor: "" });
+              setIsModalOpen(true);
             }}
             className="w-full md:w-fit px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300 cursor-pointer"
           >
             Add New Course
           </button>
+
+          {/* Feedback Message Display */}
           {message && <p className="text-center text-red-500">{message}</p>}
 
+          {/* Course Cards Grid */}
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
               <div
@@ -225,11 +236,9 @@ const Courses = () => {
             ))}
           </div>
 
-          {/* Modal */}
+          {/* Add/Edit Course Modal */}
           {isModalOpen && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center`}
-            >
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                 <h2 className="text-2xl font-bold mb-4">
                   {editingCourse ? "Edit Course" : "Add New Course"}
@@ -237,11 +246,12 @@ const Courses = () => {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    if (!validateForm()) return; // Prevent submission if validation fails
-                    handleSubmit(e); // Pass the event to handleSubmit
+                    if (!validateForm()) return;
+                    handleSubmit(e);
                   }}
                   className="space-y-4"
                 >
+                  {/* Course Name Input */}
                   <div className="flex flex-col gap-2">
                     <p className="font-bold">Course Name: </p>
                     <input
@@ -262,6 +272,32 @@ const Courses = () => {
                       <p className="text-sm text-red-500 mt-1">{errors.name}</p>
                     )}
                   </div>
+
+                  {/* Instructor Input */}
+                  <div className="flex flex-col gap-2">
+                    <p className="font-bold">Instructor: </p>
+                    <input
+                      type="text"
+                      name="instructor"
+                      placeholder="Instructor"
+                      value={formData.instructor}
+                      onChange={(e) =>
+                        setFormData({ ...formData, instructor: e.target.value })
+                      }
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring ${
+                        errors.instructor
+                          ? "border-red-500 focus:ring-red-300"
+                          : "focus:ring-blue-300"
+                      }`}
+                    />
+                    {errors.instructor && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.instructor}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Description Input */}
                   <div className="flex flex-col gap-2">
                     <p className="font-bold">Description: </p>
                     <textarea
@@ -286,28 +322,8 @@ const Courses = () => {
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <p className="font-bold">Instructor: </p>
-                    <input
-                      type="text"
-                      name="instructor"
-                      placeholder="Instructor"
-                      value={formData.instructor}
-                      onChange={(e) =>
-                        setFormData({ ...formData, instructor: e.target.value })
-                      }
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring ${
-                        errors.instructor
-                          ? "border-red-500 focus:ring-red-300"
-                          : "focus:ring-blue-300"
-                      }`}
-                    />
-                    {errors.instructor && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {errors.instructor}
-                      </p>
-                    )}
-                  </div>
+
+                  {/* Form Action Buttons */}
                   <div className="flex justify-between">
                     <button
                       type="button"
@@ -317,9 +333,9 @@ const Courses = () => {
                           name: "",
                           description: "",
                           instructor: "",
-                        }); // Reset form
-                        setErrors({}); // Clear errors
-                        setIsModalOpen(false); // Close modal
+                        });
+                        setErrors({});
+                        setIsModalOpen(false);
                       }}
                       className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-300 cursor-pointer"
                     >
@@ -353,7 +369,7 @@ const Courses = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] sm:w-1/3">
             <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
-            <p className="text-gray-700">Are you sure you want to delete ?</p>
+            <p className="text-gray-700">Are you sure you want to delete?</p>
             <div className="flex justify-end mt-4 space-x-2">
               <button
                 onClick={() => {
