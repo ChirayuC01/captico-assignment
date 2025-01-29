@@ -7,20 +7,24 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 
+// Express Application Setup
+const app = express();
+
 // Configure CORS to allow frontend origin
 const corsOptions = {
-    origin: ["https://captico-assignment-ebon.vercel.app/", "http://localhost:5173/"],
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: ["https://captico-assignment-ebon.vercel.app", "http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // Allow credentials (if using cookies/sessions)
 };
+
+// Apply CORS before routes
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Allow preflight requests
 
 // Load environment variables from .env file
 dotenv.config();
 
-// Express Application Setup
-const app = express();
 app.use(express.json()); // Configures JSON parsing middleware for request bodies
-app.use(cors(corsOptions)); // Implements CORS protection with defined options
-
 
 // Server port configuration with fallback
 const PORT = process.env.PORT || 5000;
